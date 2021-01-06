@@ -49,13 +49,14 @@ whisk:
   # your cluster type for details on what values to provide and how to get them.
   ingress:
     awsSSL: "false"
-    apiHostName: ""
-    apiHostPort: 31001
+    apiHostName: "functions-kube.hakicloud.com"
+    apiHostPort: 443
     apiHostProto: "https"
-    type: NodePort
+    type: LoadBalancer
     annotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    domain: "domain"
+      nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+      service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    domain: "functions-kube.hakicloud.com"
     tls:
       enabled: false
       secretenabled: false
@@ -70,10 +71,10 @@ whisk:
     guest: "23bc46b1-71f6-4ed5-8c54-816aa4f8c502:123zO3xZCLrMN6v2BKK1dXYFpXlPkccOFqm12CdAsMgRU4VrNZ9lyGVCGuMDGIwP"
   systemNameSpace: "/whisk.system"
   limits:
-    actionsInvokesPerminute: 60
-    actionsInvokesConcurrent: 30
-    triggersFiresPerminute: 60
-    actionsSequenceMaxlength: 50
+    actionsInvokesPerminute: 1160
+    actionsInvokesConcurrent: 1130
+    triggersFiresPerminute: 1160
+    actionsSequenceMaxlength: 550
     actions:
       time:
         min: "100ms"
@@ -85,8 +86,8 @@ whisk:
         std: "256m"
       concurrency:
         min: 1
-        max: 1
-        std: 1
+        max: 1000
+        std: 1000
       log:
         min: "0m"
         max: "10m"
@@ -146,8 +147,8 @@ k8s:
   dns: kube-dns.kube-system
   persistence:
     enabled: true
-    hasDefaultStorageClass: true
-    explicitStorageClass: null
+    hasDefaultStorageClass: false
+    explicitStorageClass: do-block-storage
 
 # Images used to run auxillary tasks/jobs
 utility:
@@ -178,7 +179,7 @@ zookeeper:
   serverPort: 2888
   leaderElectionPort: 3888
   persistence:
-    size: 256Mi
+    size: 2Gi
   # Default values for entries in zoo.cfg (see Apache Zookeeper documentation for semantics)
   config:
     tickTime: 2000
@@ -198,28 +199,28 @@ kafka:
   connect_string: null
   port: 9092
   persistence:
-    size: 512Mi
+    size: 2Gi
 
 # Database configuration
 db:
-  external: false
+  external: true
   # Should we run a Job to wipe and re-initialize the database when the chart is deployed?
   # This should always be true if external is false.
-  wipeAndInit: true
+  wipeAndInit: false
   imageName: "apache/couchdb"
   imageTag: "2.3"
   imagePullPolicy: "IfNotPresent"
   # NOTE: must be 1 (because initdb.sh enables single node mode)
   replicaCount: 1
   restartPolicy: "Always"
-  host: null
+  host: functions-couchdb.hakicloud.com
   port: 5984
   provider: "CouchDB"
   protocol: "http"
   # Production deployments _MUST_ override the default user/password values
   auth:
-    username: "whisk_admin"
-    password: "some_passw0rd"
+    username: "admin"
+    password: "WcDX7fgIgF4JJZZXTyBW"
   dbPrefix: "test_"
   activationsTable: "test_activations"
   actionsTable: "test_whisks"
@@ -312,7 +313,7 @@ redis:
   host: null
   port: 6379
   persistence:
-    size: 256Mi
+    size: 1Gi
 
 # User-events configuration
 user_events:
@@ -353,7 +354,7 @@ grafana:
 # Metrics
 metrics:
   # set true to enable prometheus exporter
-  prometheusEnabled: false
+  prometheusEnabled: true
   # passing prometheus-enabled by a config file, required by openwhisk
   whiskconfigFile: "whiskconfig.conf"
   # set true to enable Kamon
@@ -361,7 +362,7 @@ metrics:
   # set true to enable Kamon tags
   kamonTags: false
   # set true to enable user metrics
-  userMetricsEnabled: false
+  userMetricsEnabled: true
 
 # Configuration of OpenWhisk event providers
 providers:

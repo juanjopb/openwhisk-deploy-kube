@@ -25,7 +25,7 @@
   imagePullPolicy: "IfNotPresent"
   env:
   - name: "READINESS_URL"
-    value: {{ .Values.db.protocol }}://{{ include "openwhisk.db_host" . }}:{{ .Values.db.port }}/ow_kube_couchdb_initialized_marker
+    value: {{ .Values.db.protocol }}://{{ include "openwhisk.db_authentication" . }}@{{ include "openwhisk.db_host" . }}:{{ .Values.db.port }}/ow_kube_couchdb_initialized_marker
   command: ["sh", "-c", "while true; do echo 'checking CouchDB readiness'; wget -T 5 --spider $READINESS_URL --header=\"Authorization: Basic {{ include "openwhisk.db_authentication" . | b64enc }}\"; result=$?; if [ $result -eq 0 ]; then echo 'Success: CouchDB is ready!'; break; fi; echo '...not ready yet; sleeping 3 seconds before retry'; sleep 3; done;"]
 {{- end -}}
 {{- end -}}
